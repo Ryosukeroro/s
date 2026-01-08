@@ -130,3 +130,21 @@ class ScanMatcher2D:
         for i in range(len(lps)):
             lp = lps[i]
             if lp.type == ptype.ISOLATE: # 孤立点 (法線なし) は除外
+                continue
+            x = R[0, 0] * lp.x + R[0, 1] * lp.y + tx # 地図座標系に変換
+            y = R[1, 0] * lp.x + R[1, 1] * lp.y + ty
+            nx = R[0, 0] * lp.nx + R[0, 1] * lp.ny # 法線ベクトルも変換
+            ny = R[1, 0] * lp.nx + R[1, 1] * lp.ny
+
+            mlp = LPoint2D(self.cnt, x, y) # 新規に点を生成
+            mlp.setNormal(nx, ny)
+            mlp.setType(lp.type)
+            scanG_list.append(mlp)
+        scanG = np.asarray(scanG_list)
+
+        # 点群地図pcmapに登録
+        self.pcmap.addPose(pose)
+        self.pcmap.addPoints(scanG)
+        self.pcmap.setLastScan(scan) # 参照スキャン用に保存
+        self.pcmap.makeLocalMap() # 局所地図を生成
+        self.pcmap.setLastPose(pose)
